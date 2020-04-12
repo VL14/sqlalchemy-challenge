@@ -25,13 +25,17 @@ session = Session(engine)
 @app.route("/")
 def home():
     return(
-    f"Welcome To The Climate Starter Homepage<br/><br/>"
+    f"<br/>Welcome To The Hawaii Historical Temperature API!<br/><br/><br/>"
     f"The following routes are available:<br/>"
-    f"/api/v1.0/precipitation<br/>"
-    f"/api/v1.0/stations<br/>"
-    f"/api/v1.0/tobs<br/>"
-    f"/api/v1.0/start_date<br/>"
-    f"/api/v1.0/start_date/end_date<br/><br/>"
+    f"1.) /api/v1.0/precipitation - "
+    f"precipitation by date, 2010-01-01 to 2017-08-23<br/>"
+    f"2.) /api/v1.0/stations - "
+    f"weather stations, ID and station<br/>"
+    f"3.) /api/v1.0/tobs - "
+    f"temperature observations for most active station, USC00519281, for 12 mos<br/>"
+    f"4.) /api/v1.0/start_date OR "
+    f"/api/v1.0/start_date/end_date - "
+    f"minimum, average, and maximum temperatures for user-defined start or start/end range<br/><br/>"
     f" *Start and end dates should be entered in this format: yyyy-mm-dd"
     )
 @app.route("/api/v1.0/precipitation")
@@ -69,17 +73,22 @@ def temp():
 
     return jsonify(tobs)   
 
-@app.route("/api/v1.0/<start>")
-@app.route("/api/v1.0/<start>/<end>")
-def start(start=None, end=None):
+@app.route("/api/v1.0/test/<start>")
+@app.route("/api/v1.0/test/<start>/<end>")
+def start(start="2016-08-23", end="2017-08-23"):
     #Return JSON list of min temp, avg temp, and max temp for give start or start-end range
     #When given start only, calculate tmin, tavg, tmax for all dates greater than and equal to start date
     #When given start and end dates, calculate tmin, tavg, and tmax for dates between the start and end date inclusive
 
-    if type(start == str) and (end == None):
-        session.query(Measurement.station, func.min(Measurement.tobs),func.max(Measurement.tobs),func.avg(Measurement.tobs)).filter(Measurement.date >= start).all()
-    elif type(start == str) & type(end == str):
-        session.query(Measurement.station, func.min(Measurement.tobs),func.max(Measurement.tobs),func.avg(Measurement.tobs)).filter(Measurement.date >= start).filter(Measurement.date <= end).all()
+    if (start is not None) and (end is None):
+        start = session.query(Measurement.station, func.min(Measurement.tobs),func.max(Measurement.tobs),func.avg(Measurement.tobs)).filter(Measurement.date >= start).all()
+
+        return jsonify(start)
+
+    elif (start is not None) &(end is not None):
+        start_end = session.query(Measurement.station, func.min(Measurement.tobs),func.max(Measurement.tobs),func.avg(Measurement.tobs)).filter(Measurement.date >= start).filter(Measurement.date <= end).all()
+
+        return jsonify(start_end)
     else:
         print("Start and End values have not been set")
 
